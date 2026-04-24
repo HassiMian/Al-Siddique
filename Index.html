@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Al Siddique Scholars — Curriculum Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#0B2C4D; --navy-2:#12406B; --sky:#2E75B6; --teal:#0F6E56; --teal-2:#1D9E75;
+    --sand:#FAFAF7; --sand-2:#F1EFE8; --ink:#121826; --ink-2:#3A4253; --mute:#6B7280;
+    --line:#E5E7EB; --line-2:#D1D5DB; --danger:#991B1B; --warn:#B45309; --ok:#0F6E56;
+    --radius:12px; --radius-lg:16px;
+    --shadow-sm:0 1px 2px rgba(11,44,77,.06); --shadow:0 4px 16px rgba(11,44,77,.08);
+    --shadow-lg:0 12px 40px rgba(11,44,77,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--sand)}
+  body{min-height:100vh}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--sky);text-decoration:none}
+  a:hover{text-decoration:underline}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+  .hidden{display:none!important}
+
+  /* ============ SHELL ============ */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  .sidebar{background:var(--navy);color:#D9E2EC;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+  .brand-badge{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2E75B6,#1D9E75);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;box-shadow:var(--shadow-sm)}
+  .brand-text{line-height:1.15}
+  .brand-text b{color:#fff;display:block;font-size:13px;font-weight:600}
+  .brand-text span{font-size:11px;color:#9FB3C8}
+  .nav-section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7B8FA1;padding:10px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#C7D3E0;font-size:13.5px;margin-bottom:2px;transition:all .15s}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+  .nav-item.active{background:linear-gradient(90deg,rgba(46,117,182,.25),rgba(29,158,117,.12));color:#fff;font-weight:600}
+  .nav-item .dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;opacity:0;transition:opacity .2s}
+  .nav-item.active .dot{opacity:1}
+
+  .main{padding:28px 36px 60px;max-width:1400px;width:100%}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .topbar h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-0.3px}
+  .topbar .sub{font-size:13px;color:var(--mute);margin-top:2px}
+  .top-actions{display:flex;gap:8px;align-items:center}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:500;color:var(--ink);transition:all .15s;box-shadow:var(--shadow-sm)}
+  .btn:hover{border-color:var(--line-2);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2)}
+  .btn-teal{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .btn-teal:hover{background:var(--teal-2);border-color:var(--teal-2)}
+  .btn-ghost{background:transparent;border-color:transparent;box-shadow:none}
+  .btn-sm{padding:5px 10px;font-size:12px}
+  .btn-danger{color:var(--danger);border-color:#FECACA;background:#FEF2F2}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow-sm)}
+  .card-title{font-size:14px;font-weight:600;margin:0 0 4px}
+  .card-sub{font-size:12px;color:var(--mute);margin-bottom:14px}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .stat .label{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px}
+  .stat .value{font-size:26px;font-weight:700;margin-top:4px;letter-spacing:-.5px}
+  .stat .delta{font-size:11px;color:var(--teal);margin-top:2px}
+
+  .row{display:grid;gap:14px}
+  .row-2{grid-template-columns:1.4fr 1fr}
+  .row-3{grid-template-columns:repeat(3,1fr)}
+
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:12px;font-weight:600;color:var(--ink-2)}
+  .field input, .field select, .field textarea{padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;transition:border .15s, box-shadow .15s}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(46,117,182,.12)}
+
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--sand-2);border-radius:20px;font-size:11px;color:var(--ink-2);font-weight:500}
+  .chip-teal{background:#E7F6EF;color:var(--teal)}
+  .chip-sky{background:#E3EEF9;color:var(--sky)}
+  .chip-amber{background:#FEF3C7;color:var(--warn)}
+  .chip-red{background:#FEE2E2;color:var(--danger)}
+  .chip-navy{background:var(--navy);color:#fff}
+
+  /* Drop zone */
+  .dropzone{border:2px dashed var(--line-2);border-radius:var(--radius-lg);padding:40px 20px;text-align:center;background:#fff;transition:all .2s}
+  .dropzone.dragover{border-color:var(--sky);background:#F0F7FD}
+  .dropzone-ico{width:54px;height:54px;margin:0 auto 10px;border-radius:14px;background:linear-gradient(135deg,#E3EEF9,#D6E9F5);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .dropzone h3{margin:0 0 4px;font-size:16px}
+  .dropzone p{margin:0;font-size:13px;color:var(--mute)}
+
+  /* Table */
+  table.ttbl{width:100%;border-collapse:collapse}
+  table.ttbl th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);border-bottom:1px solid var(--line);background:var(--sand)}
+  table.ttbl td{padding:12px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+  table.ttbl tr:hover{background:var(--sand)}
+
+  .list{display:flex;flex-direction:column;gap:8px}
+  .list-item{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:all .15s}
+  .list-item:hover{border-color:var(--line-2);box-shadow:var(--shadow-sm)}
+
+  /* Modal */
+  .modal-back{position:fixed;inset:0;background:rgba(11,26,46,.55);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+  .modal{background:#fff;border-radius:var(--radius-lg);max-width:640px;width:100%;max-height:85vh;overflow:auto;box-shadow:var(--shadow-lg)}
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal-head h2{margin:0;font-size:17px}
+  .modal-body{padding:20px 22px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:var(--sand)}
+
+  /* Chapter tree */
+  .tree{display:flex;flex-direction:column;gap:4px}
+  .tree-ch{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tree-ch-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px}
+  .tree-ch-head:hover{background:var(--sand)}
+  .tree-topics{padding:4px 10px 10px 36px;display:none;border-top:1px solid var(--line);background:var(--sand)}
+  .tree-ch.open .tree-topics{display:block}
+  .tree-topic{padding:7px 10px;font-size:13px;display:flex;justify-content:space-between;align-items:center;border-radius:6px}
+  .tree-topic:hover{background:#fff}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--mute)}
+  .empty-ico{font-size:38px;opacity:.4;margin-bottom:8px}
+
+  /* Chat */
+  .chat-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;height:65vh}
+  .chat-messages{flex:1;overflow-y:auto;padding:18px}
+  .chat-msg{margin-bottom:14px;max-width:80%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap}
+  .chat-msg.user{background:var(--navy);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+  .chat-msg.bot{background:var(--sand-2);color:var(--ink);border-bottom-left-radius:4px}
+  .chat-input{border-top:1px solid var(--line);padding:12px;display:flex;gap:8px;background:var(--sand)}
+  .chat-input input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+
+  /* Progress */
+  .progress{height:6px;background:var(--sand-2);border-radius:3px;overflow:hidden;margin-top:8px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--teal));transition:width .3s}
+
+  /* Question preview */
+  .qp{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px;background:#fff}
+  .qp-stem{font-weight:500;margin-bottom:8px;line-height:1.5}
+  .qp-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+  .qp-opt{padding:6px 10px;background:var(--sand);border-radius:6px;font-size:13px}
+  .qp-opt.correct{background:#E7F6EF;color:var(--teal);font-weight:500}
+  .qp-meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;font-size:11px}
+
+  /* Lesson plan */
+  .lp-section{margin-bottom:18px}
+  .lp-section h4{margin:0 0 6px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.5px}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;box-shadow:var(--shadow-lg);z-index:100;font-size:13px;animation:slideIn .3s}
+  @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* Loader */
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  .spinner-dark{border-color:rgba(11,44,77,.2);border-top-color:var(--navy)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media print{
+    .sidebar,.topbar,.top-actions,.btn,nav{display:none!important}
+    .main{padding:0;max-width:100%}
+    .app{grid-template-columns:1fr}
+    .card{border:none;box-shadow:none;padding:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">AS</div>
+      <div class="brand-text">
+        <b>Al Siddique Scholars</b>
+        <span>Curriculum Intelligence</span>
+      </div>
+    </div>
+
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active" data-view="dashboard"><span class="dot"></span>📊 Dashboard</div>
+    <div class="nav-item" data-view="upload"><span class="dot"></span>📤 Upload Center</div>
+    <div class="nav-item" data-view="syllabus"><span class="dot"></span>📚 Syllabus / Chapters</div>
+    <div class="nav-item" data-view="qgen"><span class="dot"></span>✨ Question Generator</div>
+    <div class="nav-item" data-view="bank"><span class="dot"></span>🗂️ Question Bank</div>
+    <div class="nav-item" data-view="exam"><span class="dot"></span>📝 Exam Builder</div>
+    <div class="nav-item" data-view="lesson"><span class="dot"></span>🎓 Lesson Planner</div>
+    <div class="nav-item" data-view="assistant"><span class="dot"></span>🤖 AI Assistant</div>
+
+    <div class="nav-section" style="margin-top:14px">Admin</div>
+    <div class="nav-item" data-view="settings"><span class="dot"></span>⚙️ Settings &amp; API Key</div>
+    <div class="nav-item" data-view="about"><span class="dot"></span>ℹ️ About / Help</div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main" id="main">
+    <!-- Views get rendered here -->
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ============================================================
+   AL SIDDIQUE CURRICULUM INTELLIGENCE — SINGLE FILE APP
+   Storage: localStorage (no server, no hosting needed)
+   AI: uses user's Anthropic / OpenAI API key, stored locally
+============================================================ */
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ---------- STORAGE LAYER ---------- */
+const DB_KEY = 'al-siddique-db-v1';
+const defaultDB = {
+  textbooks: [],      // {id, title, subject, grade, board, pages, createdAt, chapters:[{id,number,title,topics:[{id,number,title,pageStart,pageEnd,content}]}]}
+  questions: [],      // {id, textbookId, chapterId, topicId, type, difficulty, stem, options, answer, explanation, tags}
+  papers: [],         // {id, title, class, subject, config, sections:[{title, questions:[qid]}], createdAt}
+  lessonPlans: [],    // {id, title, class, topicId, plan, createdAt}
+  settings: { apiKey:'', provider:'anthropic', schoolName:'Al Siddique Scholars', teacherName:'' }
+};
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(!raw) return {...defaultDB};
+    const parsed = JSON.parse(raw);
+    return {...defaultDB, ...parsed, settings:{...defaultDB.settings, ...(parsed.settings||{})}};
+  }catch(e){ return {...defaultDB} }
+}
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)) }
+let DB = loadDB();
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7) }
+
+/* ---------- ROUTER ---------- */
+let currentView = 'dashboard';
+function go(view){
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+  render();
+}
+document.querySelectorAll('.nav-item').forEach(n=> n.addEventListener('click', ()=> go(n.dataset.view)));
+
+/* ---------- TOASTS ---------- */
+function toast(msg, ms=2400){
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.getElementById('toastRoot').appendChild(t);
+  setTimeout(()=> t.remove(), ms);
+}
+
+/* ---------- MODAL ---------- */
+function modal({title, body, actions=[]}){
+  const root = document.getElementById('modalRoot');
+  const back = document.createElement('div'); back.className='modal-back';
+  back.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><h2>${title}</h2><button class="btn btn-ghost" id="_close">✕</button></div>
+      <div class="modal-body" id="_mbody"></div>
+      <div class="modal-foot" id="_mfoot"></div>
+    </div>`;
+  back.addEventListener('click', close);
+  root.appendChild(back);
+  const mb = back.querySelector('#_mbody');
+  if(typeof body === 'string') mb.innerHTML = body; else mb.appendChild(body);
+  const mf = back.querySelector('#_mfoot');
+  actions.forEach(a=>{
+    const b = document.createElement('button');
+    b.className = 'btn ' + (a.primary?'btn-primary':'');
+    b.textContent = a.label;
+    b.onclick = ()=>{ a.onClick && a.onClick(close); };
+    mf.appendChild(b);
+  });
+  back.querySelector('#_close').onclick = close;
+  function close(){ back.remove() }
+  return { close };
+}
+
+/* ---------- AI CALL ---------- */
+async function callAI(systemPrompt, userPrompt, {jsonMode=true}={}){
+  const {apiKey, provider} = DB.settings;
+  if(!apiKey){
+    throw new Error('Please add your AI API key in Settings first (Anthropic or OpenAI).');
+  }
+  if(provider === 'anthropic'){
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5-20250929',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages:[{role:'user', content: userPrompt}]
+      })
+    });
+    if(!res.ok){
+      const err = await res.text();
+      throw new Error('API Error: ' + err.slice(0,300));
+    }
+    const data = await res.json();
+    return data.content[0].text;
+  } else {
+    // OpenAI
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model:'gpt-4o',
+        messages:[
+          {role:'system', content: systemPrompt},
+          {role:'user', content: userPrompt}
+        ],
+        max_tokens: 4000,
+        ...(jsonMode ? {response_format:{type:'json_object'}} : {})
+      })
+    });
+    if(!res.ok){
+      const err = await res.text();
+      throw new Error('API Error: ' + err.slice(0,300));
+    }
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+}
+
+function parseJSON(text){
+  // Extract JSON from possibly-wrapped response
+  const m = text.match(/```json\s*([\s\S]*?)```/) || text.match(/```\s*([\s\S]*?)```/);
+  let t = m ? m[1] : text;
+  // Find first { or [
+  const start = Math.min(...['{','['].map(c => {const i=t.indexOf(c); return i<0?Infinity:i}));
+  const end = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+  if(start < Infinity && end > start) t = t.slice(start, end+1);
+  return JSON.parse(t);
+}
+
+/* ============================================================
+   VIEW: DASHBOARD
+============================================================ */
+function viewDashboard(){
+  const tb = DB.textbooks.length;
+  const ch = DB.textbooks.reduce((s,b)=>s+(b.chapters?.length||0),0);
+  const qb = DB.questions.length;
+  const papers = DB.papers.length;
+  const plans = DB.lessonPlans.length;
+
+  return `
+  <div class="topbar">
+    <div>
+      <h1>Assalam o Alaikum${DB.settings.teacherName? ', '+DB.settings.teacherName : ''} 👋</h1>
+      <div class="sub">${DB.settings.schoolName} — ${new Date().toLocaleDateString('en-PK', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" onclick="go('upload')">📤 Upload Textbook</button>
+      <button class="btn btn-primary" onclick="go('qgen')">✨ Generate Questions</button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="label">Textbooks</div><div class="value">${tb}</div><div class="delta">Ingested &amp; ready</div></div>
+    <div class="stat"><div class="label">Chapters</div><div class="value">${ch}</div><div class="delta">Across all books</div></div>
+    <div class="stat"><div class="label">Question Bank</div><div class="value">${qb}</div><div class="delta">Reusable questions</div></div>
+    <div class="stat"><div class="label">Exam Papers</div><div class="value">${papers}</div><div class="delta">${plans} lesson plans</div></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">Quick Actions</div>
+      <div class="card-sub">2–3 clicks to any task. Pick your next action.</div>
+      <div class="list">
+        <div class="list-item" onclick="go('upload')">
+          <div><b>📤 Upload a textbook</b><div style="font-size:12px;color:var(--mute);margin-top:2px">Start by uploading a PDF book for any class</div></div>
+          <button class="btn btn-sm">Open →</button>
+        </div>
+        <div class="list-item" onclick="go('qgen')">
+          <div><b>✨ Generate questions from a chapter</b><div style="font-size:12px;color:var(--mute);margin-top:2px">MCQ, short, long, fill-in-the-blanks — based only on your uploaded book</div></div>
+          <button class="btn btn-sm">Open →</button>
+        </div>
+        <div class="list-item" onclick="go('exam')">
+          <div><b>📝 Build an exam paper</b><div style="font-size:12px;color:var(--mute);margin-top:2px">Choose chapters, marks distribution → instant paper + PDF export</div></div>
+          <button class="btn btn-sm">Open →</button>
+        </div>
+        <div class="list-item" onclick="go('lesson')">
+          <div><b>🎓 Create a lesson plan</b><div style="font-size:12px;color:var(--mute);margin-top:2px">Daily / weekly plans with objectives, activities, assessment</div></div>
+          <button class="btn btn-sm">Open →</button>
+        </div>
+        <div class="list-item" onclick="go('assistant')">
+          <div><b>🤖 Ask the AI assistant</b><div style="font-size:12px;color:var(--mute);margin-top:2px">Explain any topic — simple, medium, advanced levels</div></div>
+          <button class="btn btn-sm">Open →</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Recent Textbooks</div>
+        <div class="card-sub">Your uploaded books</div>
+        ${DB.textbooks.length === 0 ? `
+          <div class="empty">
+            <div class="empty-ico">📚</div>
+            <div style="font-size:13px;margin-bottom:10px">No books yet</div>
+            <button class="btn btn-primary btn-sm" onclick="go('upload')">Upload First Book</button>
+          </div>
+        ` : DB.textbooks.slice(0,4).map(b=>`
+          <div class="list-item" onclick="viewBook('${b.id}')" style="margin-bottom:6px;padding:10px 12px">
+            <div style="overflow:hidden">
+              <b style="font-size:13px">${b.title}</b>
+              <div style="font-size:11px;color:var(--mute)">${b.subject||''} • ${b.grade||''} • ${b.chapters?.length||0} chapters</div>
+            </div>
+            <span class="chip chip-teal">Ready</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Setup Checklist</div>
+        <div class="card-sub">Get started in minutes</div>
+        <div style="font-size:13px;line-height:2">
+          <div>${DB.settings.apiKey ? '✅' : '⬜'} Add AI API key (<a onclick="go('settings')">Settings</a>)</div>
+          <div>${DB.textbooks.length ? '✅' : '⬜'} Upload first textbook</div>
+          <div>${DB.questions.length ? '✅' : '⬜'} Generate first questions</div>
+          <div>${DB.papers.length ? '✅' : '⬜'} Create first exam paper</div>
+          <div>${DB.lessonPlans.length ? '✅' : '⬜'} Create first lesson plan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================================================
+   VIEW: UPLOAD CENTER
+============================================================ */
+function viewUpload(){
+  return `
+  <div class="topbar">
+    <div><h1>Upload Center</h1><div class="sub">Add textbooks — we'll extract chapters and topics automatically</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="dropzone" id="dz">
+      <div class="dropzone-ico">📤</div>
+      <h3>Drop a PDF textbook here</h3>
+      <p>Or click to select • Any subject, any class • Upto 200 pages recommended</p>
+      <input type="file" id="fileInput" accept="application/pdf" style="display:none">
+      <button class="btn btn-primary" style="margin-top:14px" onclick="document.getElementById('fileInput').click()">Choose PDF</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Your Textbooks (${DB.textbooks.length})</div>
+    <div class="card-sub">Click any book to view its chapters, topics and indexed content</div>
+    ${DB.textbooks.length === 0 ? `<div class="empty"><div class="empty-ico">📚</div>No textbooks uploaded yet</div>` :
+      `<table class="ttbl">
+        <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Board</th><th>Chapters</th><th>Pages</th><th></th></tr></thead>
+        <tbody>
+        ${DB.textbooks.map(b=>`
+          <tr>
+            <td><b>${b.title}</b></td>
+            <td>${b.subject||'-'}</td>
+            <td>${b.grade||'-'}</td>
+            <td>${b.board||'-'}</td>
+            <td>${b.chapters?.length||0}</td>
+            <td>${b.pages||'-'}</td>
+            <td style="text-align:right">
+              <button class="btn btn-sm" onclick="viewBook('${b.id}')">View</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteBook('${b.id}')">Delete</button>
+            </td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>`
+    }
+  </div>
+  `;
+}
+
+async function handleFile(file){
+  if(!file || file.type !== 'application/pdf'){
+    toast('Please select a PDF file'); return;
+  }
+
+  // Ask for metadata
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Book Title *</label><input id="f_title" value="${file.name.replace(/\.pdf$/i,'')}" placeholder="e.g., Chemistry 9 - PCTB"></div>
+    <div class="field"><label>Subject</label><input id="f_subject" placeholder="e.g., Chemistry"></div>
+    <div class="field"><label>Class / Grade</label><input id="f_grade" placeholder="e.g., 9"></div>
+    <div class="field"><label>Board / Publisher</label><input id="f_board" placeholder="e.g., PCTB, Sindh Board, Oxford"></div>
+    <div style="font-size:12px;color:var(--mute);background:var(--sand-2);padding:10px 12px;border-radius:8px;margin-top:8px">
+      💡 The PDF will be parsed in your browser. For books with broken text layers, chapters can be added manually in the next step.
+    </div>
+  `;
+  const m = modal({
+    title:'Add New Textbook',
+    body: form,
+    actions:[
+      {label:'Cancel', onClick:(c)=>c()},
+      {label:'Upload & Process', primary:true, onClick: async (close)=>{
+        const title = form.querySelector('#f_title').value.trim();
+        if(!title){ toast('Please add a title'); return }
+        const book = {
+          id: uid(),
+          title,
+          subject: form.querySelector('#f_subject').value.trim(),
+          grade: form.querySelector('#f_grade').value.trim(),
+          board: form.querySelector('#f_board').value.trim(),
+          createdAt: Date.now(),
+          chapters: [],
+          pages: 0,
+          rawText: ''
+        };
+        close();
+        await processPDF(file, book);
+      }}
+    ]
+  });
+}
+
+async function processPDF(file, book){
+  const m = modal({
+    title:'Processing '+book.title,
+    body: `<div id="proc">
+      <div style="font-size:13px;color:var(--mute);margin-bottom:8px" id="procStatus">Reading PDF...</div>
+      <div class="progress"><div class="progress-fill" id="procBar" style="width:10%"></div></div>
+      <div style="font-size:12px;color:var(--mute);margin-top:12px" id="procSub">Please wait, this runs in your browser.</div>
+    </div>`,
+    actions:[]
+  });
+  const st = document.getElementById('procStatus');
+  const bar = document.getElementById('procBar');
+  const sub = document.getElementById('procSub');
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    book.pages = pdf.numPages;
+    let allText = '';
+    const perPage = [];
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      perPage.push({page:i, text: pageText});
+      allText += `\n[Page ${i}] ${pageText}`;
+      const pct = 10 + Math.floor((i/pdf.numPages)*50);
+      bar.style.width = pct+'%';
+      st.textContent = `Reading page ${i} of ${pdf.numPages}...`;
+    }
+    book.rawText = allText;
+    book.perPage = perPage;
+
+    // Quality check: if extracted text is garbage, warn
+    const junkRatio = allText.replace(/[^a-zA-Z\s]/g,'').length / Math.max(allText.length,1);
+    bar.style.width = '62%';
+
+    if(junkRatio < 0.4 || allText.length < 500){
+      st.textContent = 'Text layer looks broken — adding as manual book';
+      sub.textContent = 'Do not worry — you can add chapters manually after closing this.';
+      book.manualMode = true;
+      await new Promise(r=>setTimeout(r,1200));
+    } else {
+      // Try AI-powered chapter extraction if key available
+      if(DB.settings.apiKey){
+        st.textContent = 'Extracting chapter structure with AI...';
+        bar.style.width = '75%';
+        try {
+          const chapters = await extractChaptersAI(allText.slice(0, 30000));
+          book.chapters = chapters;
+          bar.style.width = '95%';
+          st.textContent = `Found ${chapters.length} chapters`;
+        } catch(e){
+          sub.textContent = 'AI chapter extraction failed — you can add chapters manually.';
+          book.manualMode = true;
+        }
+      } else {
+        st.textContent = 'Basic structure detection (add API key for better results)';
+        book.chapters = basicChapterDetect(allText);
+      }
+    }
+
+    bar.style.width = '100%';
+    st.textContent = '✅ Done!';
+    DB.textbooks.push(book);
+    saveDB();
+    await new Promise(r=>setTimeout(r,800));
+
+    document.querySelectorAll('.modal-back').forEach(x=>x.remove());
+    toast('Textbook added successfully');
+    go('syllabus');
+    setTimeout(()=>viewBook(book.id), 200);
+  } catch(e){
+    st.textContent = '⚠️ Error: ' + e.message;
+    sub.textContent = 'You can still add this book manually from the Syllabus view.';
+    console.error(e);
+  }
+}
+
+async function extractChaptersAI(text){
+  const sys = `You extract chapter and topic structure from textbook text. Return ONLY valid JSON in this exact shape:
+{"chapters":[{"number":"1","title":"Chapter Title","topics":[{"number":"1.1","title":"Topic Title"}]}]}
+Do not include any other text.`;
+  const user = `Extract chapters and topics from this textbook. Only return structure you can clearly see. If unsure, return fewer items.
+
+TEXT:
+${text}
+
+Return JSON only.`;
+  const out = await callAI(sys, user);
+  const parsed = parseJSON(out);
+  const chapters = (parsed.chapters||[]).map(c=>({
+    id: uid(),
+    number: c.number||'',
+    title: c.title||'Untitled',
+    topics: (c.topics||[]).map(t=>({
+      id: uid(),
+      number: t.number||'',
+      title: t.title||'Untitled',
+      content: ''
+    }))
+  }));
+  return chapters;
+}
+
+function basicChapterDetect(text){
+  const chapters = [];
+  const lines = text.split(/\[Page \d+\]/).join('\n').split('\n');
+  const rxChapter = /^\s*(chapter|unit)\s+(\d+|[IVX]+)[\s:.\-–]+(.+?)$/i;
+  const rxNumbered = /^\s*(\d+)\s+([A-Z][^0-9]{4,80})$/;
+  let current = null;
+  lines.forEach(line=>{
+    const l = line.trim();
+    if(!l) return;
+    const m1 = l.match(rxChapter);
+    const m2 = l.match(rxNumbered);
+    if(m1){
+      current = {id: uid(), number: m1[2], title: m1[3].trim(), topics:[]};
+      chapters.push(current);
+    } else if(m2 && !current){
+      current = {id: uid(), number: m2[1], title: m2[2].trim(), topics:[]};
+      chapters.push(current);
+    }
+  });
+  if(chapters.length === 0){
+    // Add a default catch-all chapter
+    chapters.push({id: uid(), number:'1', title:'Full Book Content', topics:[]});
+  }
+  return chapters;
+}
+
+function deleteBook(id){
+  modal({
+    title:'Delete textbook?',
+    body:`<p>All chapters, topics, and associated questions will be deleted. This cannot be undone.</p>`,
+    actions:[
+      {label:'Cancel', onClick:c=>c()},
+      {label:'Delete', primary:true, onClick:(c)=>{
+        DB.textbooks = DB.textbooks.filter(b=>b.id!==id);
+        DB.questions = DB.questions.filter(q=>q.textbookId!==id);
+        saveDB(); c(); toast('Deleted'); render();
+      }}
+    ]
+  });
+}
+
+/* ============================================================
+   VIEW: SYLLABUS / CHAPTERS
+============================================================ */
+let activeBookId = null;
+function viewBook(id){ activeBookId = id; go('syllabus'); }
+
+function viewSyllabus(){
+  if(!DB.textbooks.length){
+    return `<div class="topbar"><h1>Syllabus</h1></div>
+    <div class="card empty"><div class="empty-ico">📚</div>No textbooks yet<br><button class="btn btn-primary" style="margin-top:12px" onclick="go('upload')">Upload First Book</button></div>`;
+  }
+  if(!activeBookId) activeBookId = DB.textbooks[0].id;
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  if(!book){ activeBookId = DB.textbooks[0].id; return viewSyllabus(); }
+
+  const chaptersHtml = book.chapters.length===0 ? `
+    <div class="empty"><div class="empty-ico">📖</div>No chapters yet<br>
+    <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addChapter()">+ Add Chapter Manually</button></div>
+  ` : book.chapters.map(ch=>`
+    <div class="tree-ch" data-chid="${ch.id}">
+      <div class="tree-ch-head" onclick="toggleChapter('${ch.id}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-weight:600">Ch ${ch.number||''} — ${ch.title}</span>
+          <span class="chip">${ch.topics?.length||0} topics</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();addTopic('${ch.id}')">+ Topic</button>
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();editChapter('${ch.id}')">Edit</button>
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();deleteChapter('${ch.id}')">✕</button>
+        </div>
+      </div>
+      <div class="tree-topics">
+        ${(ch.topics||[]).map(t=>`
+          <div class="tree-topic">
+            <div>${t.number||''} ${t.title}</div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm btn-ghost" onclick="generateForTopic('${book.id}','${ch.id}','${t.id}')">✨ Questions</button>
+              <button class="btn btn-sm btn-ghost" onclick="editTopic('${ch.id}','${t.id}')">Edit</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteTopic('${ch.id}','${t.id}')">✕</button>
+            </div>
+          </div>
+        `).join('')}
+        ${!ch.topics?.length ? `<div style="font-size:12px;color:var(--mute);padding:6px">No topics — click + Topic to add</div>`:''}
+      </div>
+    </div>
+  `).join('');
+
+  return `
+  <div class="topbar">
+    <div><h1>Syllabus / Chapters</h1><div class="sub">Organize your book into chapters &amp; topics — the foundation of all AI features</div></div>
+    <div class="top-actions">
+      <select onchange="activeBookId=this.value;render()" class="btn" style="padding:7px 10px">
+        ${DB.textbooks.map(b=>`<option value="${b.id}" ${b.id===activeBookId?'selected':''}>${b.title}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary" onclick="addChapter()">+ Add Chapter</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      <div><div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px">Title</div><div style="margin-top:4px;font-weight:500">${book.title}</div></div>
+      <div><div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px">Subject</div><div style="margin-top:4px">${book.subject||'-'}</div></div>
+      <div><div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px">Class</div><div style="margin-top:4px">${book.grade||'-'}</div></div>
+      <div><div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px">Pages</div><div style="margin-top:4px">${book.pages||'-'}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Chapters &amp; Topics</div>
+    <div class="card-sub">Click a chapter to expand it. Use + Topic to add subtopics.</div>
+    <div class="tree">${chaptersHtml}</div>
+  </div>
+  `;
+}
+
+function toggleChapter(id){
+  document.querySelector(`[data-chid="${id}"]`)?.classList.toggle('open');
+}
+
+function addChapter(){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  if(!book) return;
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Chapter Number</label><input id="c_num" placeholder="e.g., 1"></div>
+    <div class="field"><label>Chapter Title *</label><input id="c_title" placeholder="e.g., Fundamentals of Chemistry"></div>
+  `;
+  modal({title:'Add Chapter', body:form, actions:[
+    {label:'Cancel', onClick:c=>c()},
+    {label:'Add', primary:true, onClick:(c)=>{
+      const title = form.querySelector('#c_title').value.trim();
+      if(!title){ toast('Title required'); return }
+      book.chapters.push({
+        id: uid(), number: form.querySelector('#c_num').value.trim(),
+        title, topics:[]
+      });
+      saveDB(); c(); render();
+    }}
+  ]});
+}
+
+function editChapter(chId){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  const ch = book.chapters.find(c=>c.id===chId);
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Chapter Number</label><input id="c_num" value="${ch.number||''}"></div>
+    <div class="field"><label>Chapter Title *</label><input id="c_title" value="${ch.title||''}"></div>
+  `;
+  modal({title:'Edit Chapter', body:form, actions:[
+    {label:'Cancel', onClick:c=>c()},
+    {label:'Save', primary:true, onClick:(c)=>{
+      ch.number = form.querySelector('#c_num').value.trim();
+      ch.title = form.querySelector('#c_title').value.trim();
+      saveDB(); c(); render();
+    }}
+  ]});
+}
+
+function deleteChapter(chId){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  book.chapters = book.chapters.filter(c=>c.id!==chId);
+  DB.questions = DB.questions.filter(q=>q.chapterId!==chId);
+  saveDB(); render();
+}
+
+function addTopic(chId){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  const ch = book.chapters.find(c=>c.id===chId);
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Topic Number</label><input id="t_num" placeholder="e.g., 1.1"></div>
+    <div class="field"><label>Topic Title *</label><input id="t_title" placeholder="e.g., Matter and its Nature"></div>
+    <div class="field"><label>Content / Notes (optional — helps AI generate better questions)</label>
+      <textarea id="t_content" rows="6" placeholder="Paste the topic content here or leave blank"></textarea></div>
+  `;
+  modal({title:'Add Topic', body:form, actions:[
+    {label:'Cancel', onClick:c=>c()},
+    {label:'Add', primary:true, onClick:(c)=>{
+      const title = form.querySelector('#t_title').value.trim();
+      if(!title){ toast('Title required'); return }
+      ch.topics = ch.topics||[];
+      ch.topics.push({
+        id: uid(),
+        number: form.querySelector('#t_num').value.trim(),
+        title,
+        content: form.querySelector('#t_content').value.trim()
+      });
+      saveDB(); c(); render();
+    }}
+  ]});
+}
+
+function editTopic(chId, tId){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  const ch = book.chapters.find(c=>c.id===chId);
+  const t = ch.topics.find(x=>x.id===tId);
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Topic Number</label><input id="t_num" value="${t.number||''}"></div>
+    <div class="field"><label>Topic Title</label><input id="t_title" value="${t.title||''}"></div>
+    <div class="field"><label>Content / Notes</label>
+      <textarea id="t_content" rows="8">${t.content||''}</textarea></div>
+  `;
+  modal({title:'Edit Topic', body:form, actions:[
+    {label:'Cancel', onClick:c=>c()},
+    {label:'Save', primary:true, onClick:(c)=>{
+      t.number = form.querySelector('#t_num').value.trim();
+      t.title = form.querySelector('#t_title').value.trim();
+      t.content = form.querySelector('#t_content').value.trim();
+      saveDB(); c(); render();
+    }}
+  ]});
+}
+
+function deleteTopic(chId, tId){
+  const book = DB.textbooks.find(b=>b.id===activeBookId);
+  const ch = book.chapters.find(c=>c.id===chId);
+  ch.topics = ch.topics.filter(x=>x.id!==tId);
+  DB.questions = DB.questions.filter(q=>q.topicId!==tId);
+  saveDB(); render();
+}
+
+function generateForTopic(bookId, chId, tId){
+  window._qgenPrefill = {bookId, chapterId: chId, topicId: tId};
+  go('qgen');
+}
+
+/* ============================================================
+   VIEW: QUESTION GENERATOR
+============================================================ */
+function viewQgen(){
+  if(!DB.textbooks.length){
+    return `<div class="topbar"><h1>Question Generator</h1></div>
+    <div class="card empty"><div class="empty-ico">✨</div>Upload a textbook first<br><button class="btn btn-primary" style="margin-top:12px" onclick="go('upload')">Upload</button></div>`;
+  }
+  const pre = window._qgenPrefill || {};
+  window._qgenPrefill = null;
+
+  return `
+  <div class="topbar">
+    <div><h1>Question Generator</h1><div class="sub">Generate MCQs, short, long, fill-in-the-blanks — strictly from your uploaded content</div></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">Configuration</div>
+      <div class="card-sub">Choose scope &amp; question style</div>
+
+      <div class="field">
+        <label>Textbook</label>
+        <select id="g_book" onchange="renderChapterSelect()">
+          ${DB.textbooks.map(b=>`<option value="${b.id}" ${pre.bookId===b.id?'selected':''}>${b.title}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Chapter</label>
+        <select id="g_chapter" onchange="renderTopicSelect()"></select>
+      </div>
+
+      <div class="field">
+        <label>Topic (optional — scope to one topic)</label>
+        <select id="g_topic"></select>
+      </div>
+
+      <div class="row row-3">
+        <div class="field">
+          <label>Question Type</label>
+          <select id="g_type">
+            <option value="mcq">Multiple Choice (MCQ)</option>
+            <option value="short">Short Answer</option>
+            <option value="long">Long Answer</option>
+            <option value="fill">Fill in the Blanks</option>
+            <option value="tf">True / False</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Difficulty</label>
+          <select id="g_diff">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Count</label>
+          <input type="number" id="g_count" value="10" min="1" max="30">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Custom Instructions (optional)</label>
+        <textarea id="g_custom" rows="2" placeholder="e.g., focus on definitions, include numerical problems, avoid topic X"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="genBtn" onclick="runGenerate()" style="width:100%;justify-content:center;padding:12px">
+        ✨ Generate Questions
+      </button>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Preview</div>
+        <div class="card-sub">Generated questions appear here</div>
+        <div id="qPreview">
+          <div class="empty" style="padding:40px 20px">
+            <div class="empty-ico">✨</div>
+            <div style="font-size:13px">Configure &amp; click Generate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function renderChapterSelect(){
+  const bookId = document.getElementById('g_book').value;
+  const book = DB.textbooks.find(b=>b.id===bookId);
+  const sel = document.getElementById('g_chapter');
+  sel.innerHTML = '<option value="">— All chapters —</option>' +
+    (book?.chapters||[]).map(c=>`<option value="${c.id}">Ch ${c.number||''} ${c.title}</option>`).join('');
+  renderTopicSelect();
+}
+function renderTopicSelect(){
+  const bookId = document.getElementById('g_book').value;
+  const chId = document.getElementById('g_chapter').value;
+  const book = DB.textbooks.find(b=>b.id===bookId);
+  const ch = book?.chapters?.find(c=>c.id===chId);
+  const sel = document.getElementById('g_topic');
+  sel.innerHTML = '<option value="">— All topics in chapter —</option>' +
+    (ch?.topics||[]).map(t=>`<option value="${t.id}">${t.number||''} ${t.title}</option>`).join('');
+}
+
+async function runGenerate(){
+  const bookId = document.getElementById('g_book').value;
+  const chId = document.getElementById('g_chapter').value;
+  const tId = document.getElementById('g_topic').value;
+  const type = document.getElementById('g_type').value;
+  const diff = document.getElementById('g_diff').value;
+  const count = parseInt(document.getElementById('g_count').value,10)||10;
+  const custom = document.getElementById('g_custom').value.trim();
+
+  const book = DB.textbooks.find(b=>b.id===bookId);
+  if(!book){ toast('Select a book'); return }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  const preview = document.getElementById('qPreview');
+  preview.innerHTML = '<div class="empty"><div class="spinner spinner-dark" style="width:28px;height:28px"></div><div style="margin-top:10px;font-size:13px">Thinking...</div></div>';
+
+  try {
+    // Build source text
+    let source = '';
+    let scope = book.title;
+    if(tId){
+      const ch = book.chapters.find(c=>c.id===chId);
+      const t = ch?.topics?.find(x=>x.id===tId);
+      source = t?.content || '';
+      scope = `${book.title} > Ch ${ch.number||''} ${ch.title} > ${t.number||''} ${t.title}`;
+      if(!source){ source = ch.title + '\n' + (t?.title||''); }
+    } else if(chId){
+      const ch = book.chapters.find(c=>c.id===chId);
+      scope = `${book.title} > Ch ${ch.number||''} ${ch.title}`;
+      source = ch.topics?.map(t=>`${t.number||''} ${t.title}\n${t.content||''}`).join('\n\n') || ch.title;
+    } else {
+      source = (book.rawText||'').slice(0, 20000) || book.chapters.map(c=>`${c.number} ${c.title}\n${(c.topics||[]).map(t=>t.number+' '+t.title).join('\n')}`).join('\n\n');
+    }
+
+    if(!source || source.length < 50){
+      source = `Scope: ${scope}\nPlease generate questions appropriate for ${book.subject||'this subject'}, class ${book.grade||''}.`;
+    }
+
+    const typeInstructions = {
+      mcq: 'Each question has: stem (string), options (array of 4 strings labeled A,B,C,D), answer (string: A/B/C/D), explanation (string).',
+      short: 'Each question has: stem (string, short answer expected 2-4 sentences), answer (string: model answer), explanation (string, optional).',
+      long: 'Each question has: stem (string, long descriptive answer expected), answer (string: model answer with key points), explanation (string, optional).',
+      fill: 'Each question has: stem (string with ___ for blank), answer (string: the word/phrase for the blank), explanation (string, optional).',
+      tf: 'Each question has: stem (string, statement), answer (string: "True" or "False"), explanation (string).'
+    };
+
+    const sys = `You are a senior curriculum specialist creating ${diff} difficulty ${type.toUpperCase()} questions for ${book.subject||'a subject'} class ${book.grade||''}. Generate exactly ${count} questions strictly based on the provided source material. Do NOT invent facts outside the source. Return ONLY a JSON object in this exact shape: {"questions":[ ... ]}. ${typeInstructions[type]}`;
+    const user = `SCOPE: ${scope}
+CUSTOM INSTRUCTIONS: ${custom || 'none'}
+
+SOURCE MATERIAL:
+${source}
+
+Generate ${count} ${diff} ${type} questions. Return JSON only.`;
+
+    const raw = await callAI(sys, user);
+    const parsed = parseJSON(raw);
+    const qs = parsed.questions || [];
+    if(!qs.length) throw new Error('No questions parsed');
+
+    // Save to bank
+    const newQs = qs.map(q=>({
+      id: uid(),
+      textbookId: bookId, chapterId: chId||null, topicId: tId||null,
+      type, difficulty: diff, stem: q.stem||'', options: q.options||[],
+      answer: q.answer||'', explanation: q.explanation||'',
+      scope, createdAt: Date.now()
+    }));
+    DB.questions.push(...newQs);
+    saveDB();
+
+    // Render preview
+    preview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <b>${newQs.length} questions generated</b>
+        <button class="btn btn-sm btn-teal" onclick="go('bank')">View in Bank →</button>
+      </div>
+      <div style="max-height:55vh;overflow:auto">
+        ${newQs.map((q,i)=>renderQuestionCard(q,i+1)).join('')}
+      </div>
+    `;
+    toast(`${newQs.length} questions added to Bank`);
+  } catch(e){
+    preview.innerHTML = `<div class="card" style="background:#FEF2F2;border-color:#FECACA;color:var(--danger)"><b>Error:</b> ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Generate Questions';
+  }
+}
+
+function renderQuestionCard(q, num){
+  const opts = (q.options||[]).map((o,i)=>{
+    const letter = String.fromCharCode(65+i);
+    const isCorrect = q.answer && (q.answer.toUpperCase().startsWith(letter) || q.answer===o);
+    return `<div class="qp-opt ${isCorrect?'correct':''}">${letter}. ${o}</div>`;
+  }).join('');
+  return `
+    <div class="qp">
+      <div class="qp-stem"><b>Q${num}.</b> ${q.stem}</div>
+      ${q.options?.length ? `<div class="qp-opts">${opts}</div>` : ''}
+      ${!q.options?.length && q.answer ? `<div style="font-size:13px;color:var(--teal);background:#E7F6EF;padding:6px 10px;border-radius:6px;margin-top:6px"><b>Answer:</b> ${q.answer}</div>`:''}
+      ${q.explanation ? `<div style="font-size:12px;color:var(--mute);margin-top:6px"><b>Explanation:</b> ${q.explanation}</div>`:''}
+      <div class="qp-meta">
+        <span class="chip chip-sky">${q.type?.toUpperCase()}</span>
+        <span class="chip">${q.difficulty}</span>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   VIEW: QUESTION BANK
+============================================================ */
+let bankFilter = { type:'', diff:'', book:'', search:'' };
+
+function viewBank(){
+  let qs = DB.questions.slice().reverse();
+  if(bankFilter.type) qs = qs.filter(q=>q.type===bankFilter.type);
+  if(bankFilter.diff) qs = qs.filter(q=>q.difficulty===bankFilter.diff);
+  if(bankFilter.book) qs = qs.filter(q=>q.textbookId===bankFilter.book);
+  if(bankFilter.search) qs = qs.filter(q=>q.stem.toLowerCase().includes(bankFilter.search.toLowerCase()));
+
+  return `
+  <div class="topbar">
+    <div><h1>Question Bank</h1><div class="sub">${DB.questions.length} total questions • ${qs.length} showing</div></div>
+    <div class="top-actions">
+      <button class="btn" onclick="exportBank()">📥 Export</button>
+      <button class="btn btn-primary" onclick="go('qgen')">+ Generate More</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="row" style="grid-template-columns:2fr 1fr 1fr 1fr">
+      <div class="field" style="margin:0"><label>Search stem</label><input id="bSearch" value="${bankFilter.search}" oninput="bankFilter.search=this.value;render()"></div>
+      <div class="field" style="margin:0"><label>Textbook</label>
+        <select onchange="bankFilter.book=this.value;render()">
+          <option value="">All</option>
+          ${DB.textbooks.map(b=>`<option value="${b.id}" ${bankFilter.book===b.id?'selected':''}>${b.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Type</label>
+        <select onchange="bankFilter.type=this.value;render()">
+          <option value="">All</option>
+          <option value="mcq" ${bankFilter.type==='mcq'?'selected':''}>MCQ</option>
+          <option value="short" ${bankFilter.type==='short'?'selected':''}>Short</option>
+          <option value="long" ${bankFilter.type==='long'?'selected':''}>Long</option>
+          <option value="fill" ${bankFilter.type==='fill'?'selected':''}>Fill blanks</option>
+          <option value="tf" ${bankFilter.type==='tf'?'selected':''}>True/False</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Difficulty</label>
+        <select onchange="bankFilter.diff=this.value;render()">
+          <option value="">All</option>
+          <option value="easy" ${bankFilter.diff==='easy'?'selected':''}>Easy</option>
+          <option value="medium" ${bankFilter.diff==='medium'?'selected':''}>Medium</option>
+          <option value="hard" ${bankFilter.diff==='hard'?'selected':''}>Hard</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    ${qs.length===0 ? `<div class="empty"><div class="empty-ico">🗂️</div>No questions match your filters</div>` :
+      qs.slice(0, 50).map((q,i)=>`
+        <div style="border-bottom:1px solid var(--line);padding:14px 0">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div style="flex:1">
+              <div style="font-weight:500;margin-bottom:6px">Q${i+1}. ${q.stem}</div>
+              ${q.options?.length ? `<div style="font-size:13px;color:var(--ink-2);margin:4px 0">${q.options.map((o,j)=>`${String.fromCharCode(65+j)}. ${o}`).join(' &nbsp; ')}</div>`:''}
+              <div style="font-size:12px;color:var(--teal);margin-top:4px"><b>Ans:</b> ${q.answer||'-'}</div>
+              <div class="qp-meta" style="margin-top:6px">
+                <span class="chip chip-sky">${q.type?.toUpperCase()}</span>
+                <span class="chip">${q.difficulty}</span>
+                <span class="chip">${DB.textbooks.find(b=>b.id===q.textbookId)?.title||'-'}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button class="btn btn-sm" onclick="editQuestion('${q.id}')">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('')
+      + (qs.length > 50 ? `<div style="text-align:center;padding:14px;color:var(--mute);font-size:13px">Showing first 50 of ${qs.length}. Use filters to narrow.</div>`:'')
+    }
+  </div>
+  `;
+}
+
+function editQuestion(id){
+  const q = DB.questions.find(x=>x.id===id);
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <div class="field"><label>Question</label><textarea id="q_stem" rows="3">${q.stem}</textarea></div>
+    ${q.options?.length ? q.options.map((o,i)=>`
+      <div class="field"><label>Option ${String.fromCharCode(65+i)}</label><input id="q_opt_${i}" value="${o}"></div>
+    `).join('') : ''}
+    <div class="field"><label>Answer</label><input id="q_ans" value="${q.answer||''}"></div>
+    <div class="field"><label>Explanation</label><textarea id="q_exp" rows="2">${q.explanation||''}</textarea></div>
+  `;
+  modal({title:'Edit Question', body:form, actions:[
+    {label:'Cancel', onClick:c=>c()},
+    {label:'Save', primary:true, onClick:(c)=>{
+      q.stem = form.querySelector('#q_stem').value;
+      if(q.options?.length){
+        q.options = q.options.map((_,i)=>form.querySelector('#q_opt_'+i).value);
+      }
+      q.answer = form.querySelector('#q_ans').value;
+      q.explanation = form.querySelector('#q_exp').value;
+      saveDB(); c(); render();
+    }}
+  ]});
+}
+function deleteQuestion(id){
+  DB.questions = DB.questions.filter(q=>q.id!==id);
+  saveDB(); render(); toast('Deleted');
+}
+function exportBank(){
+  const blob = new Blob([JSON.stringify(DB.questions, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'question-bank.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   VIEW: EXAM BUILDER
+============================================================ */
+function viewExam(){
+  return `
+  <div class="topbar">
+    <div><h1>Exam Paper Builder</h1><div class="sub">Auto-assemble a paper from your question bank with correct marks distribution</div></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">Paper Configuration</div>
+      <div class="card-sub">Setup sections &amp; marks</div>
+
+      <div class="field"><label>Paper Title *</label><input id="p_title" placeholder="e.g., Chemistry 9 - Mid Term Exam 2026"></div>
+      <div class="row" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Class</label><input id="p_class" placeholder="9-A"></div>
+        <div class="field"><label>Subject</label><input id="p_subj" placeholder="Chemistry"></div>
+      </div>
+      <div class="row" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Total Marks</label><input id="p_marks" type="number" value="50"></div>
+        <div class="field"><label>Time (minutes)</label><input id="p_time" type="number" value="90"></div>
+      </div>
+
+      <div class="field"><label>Filter by Textbook (optional)</label>
+        <select id="p_book"><option value="">Any book</option>
+          ${DB.textbooks.map(b=>`<option value="${b.id}">${b.title}</option>`).join('')}
+        </select>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin:14px 0;padding-top:14px">
+        <b style="font-size:13px">Sections &amp; Question Mix</b>
+        <div style="font-size:12px;color:var(--mute);margin-bottom:10px">Define what questions to pick and how many marks each</div>
+
+        <div id="sectionsList"></div>
+
+        <button class="btn btn-sm" onclick="addSection()" style="margin-top:8px">+ Add Section</button>
+      </div>
+
+      <button class="btn btn-primary" onclick="buildPaper()" style="width:100%;justify-content:center;padding:12px;margin-top:10px">📝 Build Paper</button>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Preview / Saved Papers</div>
+        <div class="card-sub">${DB.papers.length} papers saved</div>
+        <div id="paperList" style="max-height:70vh;overflow:auto">
+          ${DB.papers.length===0 ? `<div class="empty"><div class="empty-ico">📝</div>No papers yet</div>` :
+            DB.papers.slice().reverse().map(p=>`
+              <div class="list-item" style="margin-bottom:6px">
+                <div style="flex:1;overflow:hidden">
+                  <b style="font-size:13px">${p.title}</b>
+                  <div style="font-size:11px;color:var(--mute)">${p.class||''} • ${p.subject||''} • ${p.totalMarks||'-'} marks • ${p.sections?.reduce((s,se)=>s+se.questions.length,0)} questions</div>
+                </div>
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-sm" onclick="previewPaper('${p.id}')">Preview</button>
+                  <button class="btn btn-sm" onclick="exportPaperPDF('${p.id}')">PDF</button>
+                  <button class="btn btn-sm btn-danger" onclick="deletePaper('${p.id}')">✕</button>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+let examSections = [];
+function addSection(){
+  examSections.push({id:uid(), title:'Section '+String.fromCharCode(65+examSections.length), type:'mcq', diff:'medium', count:10, marks:1});
+  renderSections();
+}
+function removeSection(id){
+  examSections = examSections.filter(s=>s.id!==id);
+  renderSections();
+}
+function renderSections(){
+  const el = document.getElementById('sectionsList');
+  if(!el) return;
+  el.innerHTML = examSections.map(s=>`
+    <div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--sand)">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <input style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px" value="${s.title}" oninput="updateSec('${s.id}','title',this.value)">
+        <button class="btn btn-sm btn-danger" onclick="removeSection('${s.id}')">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:12px">
+        <select onchange="updateSec('${s.id}','type',this.value)">
+          <option value="mcq" ${s.type==='mcq'?'selected':''}>MCQ</option>
+          <option value="short" ${s.type==='short'?'selected':''}>Short</option>
+          <option value="long" ${s.type==='long'?'selected':''}>Long</option>
+          <option value="fill" ${s.type==='fill'?'selected':''}>Fill blanks</option>
+          <option value="tf" ${s.type==='tf'?'selected':''}>True/False</option>
+        </select>
+        <select onchange="updateSec('${s.id}','diff',this.value)">
+          <option value="" ${!s.diff?'selected':''}>Any diff</option>
+          <option value="easy" ${s.diff==='easy'?'selected':''}>Easy</option>
+          <option value="medium" ${s.diff==='medium'?'selected':''}>Medium</option>
+          <option value="hard" ${s.diff==='hard'?'selected':''}>Hard</option>
+        </select>
+        <input type="number" min="1" value="${s.count}" placeholder="Count" onchange="updateSec('${s.id}','count',parseInt(this.value))">
+        <input type="number" min="1" value="${s.marks}" placeholder="Marks/Q" onchange="updateSec('${s.id}','marks',parseInt(this.value))">
+      </div>
+    </div>
+  `).join('');
+}
+function updateSec(id, k, v){
+  const s = examSections.find(x=>x.id===id);
+  s[k]=v;
+}
+
+function buildPaper(){
+  const title = document.getElementById('p_title').value.trim();
+  if(!title){ toast('Enter paper title'); return }
+  if(examSections.length===0){ toast('Add at least one section'); return }
+
+  const bookFilter = document.getElementById('p_book').value;
+  const sections = [];
+  let usedIds = new Set();
+
+  for(const s of examSections){
+    let pool = DB.questions.filter(q=>q.type===s.type);
+    if(bookFilter) pool = pool.filter(q=>q.textbookId===bookFilter);
+    if(s.diff) pool = pool.filter(q=>q.difficulty===s.diff);
+    pool = pool.filter(q=>!usedIds.has(q.id));
+    // shuffle
+    pool.sort(()=>Math.random()-0.5);
+    const picked = pool.slice(0, s.count);
+    picked.forEach(q=>usedIds.add(q.id));
+
+    sections.push({
+      id: s.id, title: s.title, type: s.type, marksPerQ: s.marks,
+      questions: picked.map(q=>q.id),
+      shortfall: Math.max(0, s.count - picked.length)
+    });
+  }
+
+  const paper = {
+    id: uid(),
+    title,
+    class: document.getElementById('p_class').value.trim(),
+    subject: document.getElementById('p_subj').value.trim(),
+    totalMarks: parseInt(document.getElementById('p_marks').value)||0,
+    duration: parseInt(document.getElementById('p_time').value)||0,
+    sections,
+    bookId: bookFilter,
+    createdAt: Date.now()
+  };
+  DB.papers.push(paper);
+  saveDB();
+  examSections = [];
+
+  const shortfalls = sections.filter(s=>s.shortfall>0);
+  if(shortfalls.length){
+    toast(`Paper created — but ${shortfalls.map(s=>s.shortfall+' '+s.title).join(', ')} short. Generate more in the bank.`, 4500);
+  } else {
+    toast('Paper created successfully');
+  }
+  previewPaper(paper.id);
+}
+
+function previewPaper(id){
+  const p = DB.papers.find(x=>x.id===id);
+  if(!p){ toast('Paper not found'); return }
+  const html = renderPaperHTML(p);
+  const m = modal({
+    title: p.title,
+    body: html,
+    actions:[
+      {label:'Close', onClick:c=>c()},
+      {label:'Print / PDF', primary:true, onClick:()=>{
+        exportPaperPDF(p.id);
+      }}
+    ]
+  });
+}
+
+function renderPaperHTML(p){
+  let html = `
+    <div style="border:1px solid var(--line);padding:24px;background:#fff;font-family:Georgia,serif">
+      <div style="text-align:center;border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:700;color:var(--navy)">${DB.settings.schoolName}</div>
+        <div style="font-size:15px;margin-top:4px"><b>${p.title}</b></div>
+        <div style="font-size:12px;color:var(--mute);margin-top:4px">
+          Class: ${p.class||'—'} &nbsp;•&nbsp; Subject: ${p.subject||'—'} &nbsp;•&nbsp;
+          Total Marks: ${p.totalMarks||'—'} &nbsp;•&nbsp; Time: ${p.duration||'—'} min
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:16px">
+        <div>Name: _______________________________</div>
+        <div>Roll No: _____________</div>
+        <div>Date: _____________</div>
+      </div>
+  `;
+  let qNum = 1;
+  p.sections.forEach((s,si)=>{
+    const secQs = s.questions.map(qid=>DB.questions.find(q=>q.id===qid)).filter(Boolean);
+    const totalSecMarks = secQs.length * (s.marksPerQ||1);
+    html += `<div style="margin-top:16px"><b style="font-size:14px;color:var(--navy)">${s.title}</b> <span style="color:var(--mute);font-size:12px">(${secQs.length} × ${s.marksPerQ} = ${totalSecMarks} marks)</span></div>`;
+    html += `<div style="font-size:12px;color:var(--mute);margin-bottom:8px">Attempt all questions.</div>`;
+    secQs.forEach(q=>{
+      html += `<div style="margin-bottom:10px;font-size:13px;line-height:1.6">
+        <b>Q${qNum}.</b> ${q.stem} <span style="float:right;color:var(--mute)">(${s.marksPerQ})</span>`;
+      if(q.options?.length){
+        html += `<div style="margin-top:4px;margin-left:20px">${q.options.map((o,i)=>`<div>${String.fromCharCode(65+i)}. ${o}</div>`).join('')}</div>`;
+      }
+      html += `</div>`;
+      qNum++;
+    });
+  });
+  html += `<div style="text-align:center;margin-top:24px;font-style:italic;color:var(--mute);font-size:11px">— End of Paper —</div></div>`;
+
+  // Answer key
+  html += `<details style="margin-top:16px"><summary style="cursor:pointer;font-weight:600;font-size:13px">📘 Show Answer Key</summary>
+    <div style="padding:12px;background:var(--sand);border-radius:8px;margin-top:8px;font-size:12px">`;
+  let n = 1;
+  p.sections.forEach(s=>{
+    s.questions.forEach(qid=>{
+      const q = DB.questions.find(x=>x.id===qid);
+      if(q) html += `<div><b>Q${n}.</b> ${q.answer||'—'}</div>`;
+      n++;
+    });
+  });
+  html += `</div></details>`;
+
+  return html;
+}
+
+async function exportPaperPDF(id){
+  const p = DB.papers.find(x=>x.id===id);
+  if(!p){ toast('Paper not found'); return }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const margin = 40;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  let y = margin;
+
+  function checkPage(needed=20){
+    if(y + needed > pageH - margin){ doc.addPage(); y = margin; }
+  }
+  function text(str, x, opts={}){
+    const size = opts.size||11;
+    doc.setFontSize(size);
+    doc.setFont(opts.font||'times', opts.style||'normal');
+    const lines = doc.splitTextToSize(str, pageW - 2*margin - (x-margin));
+    lines.forEach(ln=>{
+      checkPage(size+4);
+      doc.text(ln, x, y);
+      y += size + 3;
+    });
+  }
+
+  // Header
+  doc.setFont('times','bold'); doc.setFontSize(14);
+  doc.text(DB.settings.schoolName, pageW/2, y, {align:'center'}); y += 18;
+  doc.setFontSize(12);
+  doc.text(p.title, pageW/2, y, {align:'center'}); y += 14;
+  doc.setFont('times','normal'); doc.setFontSize(10);
+  doc.text(`Class: ${p.class||'—'}   Subject: ${p.subject||'—'}   Total Marks: ${p.totalMarks||'—'}   Time: ${p.duration||'—'} min`, pageW/2, y, {align:'center'});
+  y += 16;
+  doc.setDrawColor(11,44,77); doc.line(margin, y, pageW-margin, y); y += 16;
+  doc.text('Name: ______________________________     Roll No: ____________     Date: ___________', margin, y);
+  y += 20;
+
+  let qNum = 1;
+  p.sections.forEach((s)=>{
+    checkPage(40);
+    doc.setFont('times','bold'); doc.setFontSize(12);
+    doc.text(s.title, margin, y);
+    doc.setFont('times','italic'); doc.setFontSize(9);
+    const secQs = s.questions.map(qid=>DB.questions.find(q=>q.id===qid)).filter(Boolean);
+    const totalSecMarks = secQs.length * (s.marksPerQ||1);
+    doc.text(`(${secQs.length} × ${s.marksPerQ} = ${totalSecMarks} marks)`, pageW-margin, y, {align:'right'});
+    y += 16;
+
+    doc.setFont('times','normal'); doc.setFontSize(11);
+    secQs.forEach(q=>{
+      checkPage(40);
+      const stem = `Q${qNum}. ${q.stem}`;
+      const stemLines = doc.splitTextToSize(stem, pageW - 2*margin - 30);
+      stemLines.forEach((ln,i)=>{
+        checkPage(14);
+        doc.text(ln, margin, y);
+        if(i===0) doc.text(`(${s.marksPerQ})`, pageW-margin, y, {align:'right'});
+        y += 14;
+      });
+      if(q.options?.length){
+        q.options.forEach((o,i)=>{
+          checkPage(14);
+          doc.text(`${String.fromCharCode(65+i)}. ${o}`, margin+20, y);
+          y += 13;
+        });
+      }
+      if(q.type==='short' || q.type==='long'){
+        y += (q.type==='long'? 60 : 30);
+      } else if(q.type==='fill'){
+        y += 6;
+      }
+      y += 4;
+      qNum++;
+    });
+    y += 8;
+  });
+
+  checkPage(30);
+  doc.setFont('times','italic'); doc.setFontSize(10);
+  doc.text('— End of Paper —', pageW/2, y, {align:'center'});
+
+  // Answer key page
+  doc.addPage(); y = margin;
+  doc.setFont('times','bold'); doc.setFontSize(14);
+  doc.text('Answer Key — '+p.title, pageW/2, y, {align:'center'}); y += 20;
+  doc.setFont('times','normal'); doc.setFontSize(10);
+  let n = 1;
+  p.sections.forEach(s=>{
+    s.questions.forEach(qid=>{
+      const q = DB.questions.find(x=>x.id===qid);
+      if(!q){ n++; return }
+      checkPage(20);
+      const line = `Q${n}. ${q.answer || '—'}`;
+      const ll = doc.splitTextToSize(line, pageW - 2*margin);
+      ll.forEach(l=>{ checkPage(12); doc.text(l, margin, y); y+=12 });
+      if(q.explanation){
+        doc.setFont('times','italic'); doc.setFontSize(9);
+        const el = doc.splitTextToSize('Explanation: '+q.explanation, pageW-2*margin-20);
+        el.forEach(l=>{ checkPage(11); doc.text(l, margin+10, y); y+=11 });
+        doc.setFont('times','normal'); doc.setFontSize(10);
+      }
+      y += 4;
+      n++;
+    });
+  });
+
+  doc.save(p.title.replace(/[^a-z0-9]+/gi,'_') + '.pdf');
+  toast('PDF downloaded');
+}
+
+function deletePaper(id){
+  DB.papers = DB.papers.filter(p=>p.id!==id);
+  saveDB(); render(); toast('Paper deleted');
+}
+
+/* ============================================================
+   VIEW: LESSON PLANNER
+============================================================ */
+function viewLesson(){
+  return `
+  <div class="topbar">
+    <div><h1>Lesson Planner</h1><div class="sub">Generate daily, weekly &amp; full syllabus plans with objectives, activities, assessment</div></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">Create Lesson Plan</div>
+      <div class="card-sub">AI will structure objectives, activities, and assessment</div>
+
+      <div class="field"><label>Plan Type</label>
+        <select id="l_type">
+          <option value="daily">Daily (single topic, 1 period)</option>
+          <option value="weekly">Weekly (multiple topics, 5 days)</option>
+          <option value="syllabus">Full Syllabus Plan (whole book pacing)</option>
+        </select>
+      </div>
+
+      <div class="field"><label>Class</label><input id="l_class" placeholder="e.g., 9-A"></div>
+
+      <div class="field"><label>Textbook</label>
+        <select id="l_book" onchange="renderLessonChapterSelect()">
+          ${DB.textbooks.map(b=>`<option value="${b.id}">${b.title}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="field"><label>Chapter / Scope</label>
+        <select id="l_chapter"></select>
+      </div>
+
+      <div class="field"><label>Period Duration (minutes)</label>
+        <input type="number" id="l_dur" value="40">
+      </div>
+
+      <div class="field"><label>Additional Notes</label>
+        <textarea id="l_notes" rows="2" placeholder="e.g., focus on practical activities, use local Pakistani examples"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="lbtn" onclick="generateLessonPlan()" style="width:100%;justify-content:center;padding:12px">🎓 Generate Plan</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Saved Plans</div>
+      <div class="card-sub">${DB.lessonPlans.length} saved</div>
+      <div style="max-height:70vh;overflow:auto" id="plansList">
+        ${DB.lessonPlans.length===0 ? `<div class="empty"><div class="empty-ico">🎓</div>No plans yet</div>` :
+          DB.lessonPlans.slice().reverse().map(p=>`
+            <div class="list-item" style="margin-bottom:6px">
+              <div style="flex:1;overflow:hidden">
+                <b style="font-size:13px">${p.title}</b>
+                <div style="font-size:11px;color:var(--mute)">${p.class||''} • ${p.planType||''} • ${new Date(p.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="previewLessonPlan('${p.id}')">View</button>
+                <button class="btn btn-sm btn-danger" onclick="deletePlan('${p.id}')">✕</button>
+              </div>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function renderLessonChapterSelect(){
+  const bookId = document.getElementById('l_book').value;
+  const book = DB.textbooks.find(b=>b.id===bookId);
+  const sel = document.getElementById('l_chapter');
+  sel.innerHTML = '<option value="">— Whole book —</option>' +
+    (book?.chapters||[]).map(c=>`<option value="${c.id}">Ch ${c.number||''} ${c.title}</option>`).join('');
+}
+
+async function generateLessonPlan(){
+  const type = document.getElementById('l_type').value;
+  const cls = document.getElementById('l_class').value.trim();
+  const bookId = document.getElementById('l_book').value;
+  const chId = document.getElementById('l_chapter').value;
+  const dur = document.getElementById('l_dur').value;
+  const notes = document.getElementById('l_notes').value.trim();
+
+  const book = DB.textbooks.find(b=>b.id===bookId);
+  if(!book){ toast('Select a book'); return }
+  const chapter = chId ? book.chapters.find(c=>c.id===chId) : null;
+
+  const btn = document.getElementById('lbtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+  try {
+    const scope = chapter ? `Chapter ${chapter.number||''}: ${chapter.title}` : 'Full book';
+    const sourceContent = chapter
+      ? (chapter.topics||[]).map(t=>`${t.number||''} ${t.title}\n${t.content||''}`).join('\n\n') || chapter.title
+      : (book.chapters.map(c=>`Ch ${c.number} ${c.title}: ${(c.topics||[]).map(t=>t.title).join(', ')}`).join('\n'));
+
+    const sys = `You are a senior curriculum specialist. Generate a ${type} lesson plan. Return ONLY JSON in this exact shape:
+{
+  "title": "...",
+  "overview": "...",
+  "learningObjectives": ["..."],
+  "keyConcepts": ["..."],
+  "prerequisites": ["..."],
+  "materials": ["..."],
+  "timeBreakdown": [{"phase":"Introduction","minutes":5,"activity":"..."}, ...],
+  "teachingStrategy": ["step 1", "step 2"],
+  "classActivities": ["..."],
+  "homework": ["..."],
+  "engagementQuestions": ["..."],
+  "assessment": ["..."],
+  "closureSummary": "..."
+}`;
+    const user = `PLAN TYPE: ${type}
+CLASS: ${cls||'—'}
+SUBJECT: ${book.subject||'—'}  GRADE: ${book.grade||'—'}
+SCOPE: ${scope}
+PERIOD: ${dur} minutes
+NOTES: ${notes||'none'}
+
+CONTENT:
+${sourceContent}
+
+Generate a complete lesson plan in the JSON schema. Return JSON only.`;
+
+    const raw = await callAI(sys, user);
+    const plan = parseJSON(raw);
+    const saved = {
+      id: uid(),
+      title: plan.title || `${type} Plan — ${scope}`,
+      class: cls,
+      subject: book.subject,
+      planType: type,
+      bookId,
+      chapterId: chId,
+      plan,
+      createdAt: Date.now()
+    };
+    DB.lessonPlans.push(saved);
+    saveDB();
+    toast('Lesson plan saved');
+    previewLessonPlan(saved.id);
+  } catch(e){
+    toast('Error: '+e.message, 4000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🎓 Generate Plan';
+  }
+}
+
+function previewLessonPlan(id){
+  const p = DB.lessonPlans.find(x=>x.id===id);
+  if(!p) return;
+  const pl = p.plan||{};
+  const body = document.createElement('div');
+  body.innerHTML = `
+    <div style="font-family:Georgia,serif">
+      <h3 style="margin:0 0 4px;color:var(--navy)">${p.title}</h3>
+      <div style="font-size:12px;color:var(--mute);margin-bottom:14px">${p.class||''} • ${p.subject||''} • ${p.planType||''}</div>
+
+      ${pl.overview ? `<div class="lp-section"><h4>Overview</h4><div>${pl.overview}</div></div>`:''}
+
+      ${pl.learningObjectives?.length ? `<div class="lp-section"><h4>Learning Objectives</h4><ul>${pl.learningObjectives.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.keyConcepts?.length ? `<div class="lp-section"><h4>Key Concepts</h4>${pl.keyConcepts.map(c=>`<span class="chip chip-sky" style="margin:3px">${c}</span>`).join('')}</div>`:''}
+
+      ${pl.prerequisites?.length ? `<div class="lp-section"><h4>Prerequisites</h4><ul>${pl.prerequisites.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.materials?.length ? `<div class="lp-section"><h4>Materials Needed</h4><ul>${pl.materials.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.timeBreakdown?.length ? `<div class="lp-section"><h4>Time Breakdown</h4>
+        <table class="ttbl"><thead><tr><th>Phase</th><th>Min</th><th>Activity</th></tr></thead><tbody>
+        ${pl.timeBreakdown.map(t=>`<tr><td>${t.phase}</td><td>${t.minutes}</td><td>${t.activity}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`:''}
+
+      ${pl.teachingStrategy?.length ? `<div class="lp-section"><h4>Teaching Strategy</h4><ol>${pl.teachingStrategy.map(o=>`<li>${o}</li>`).join('')}</ol></div>`:''}
+
+      ${pl.classActivities?.length ? `<div class="lp-section"><h4>Class Activities</h4><ul>${pl.classActivities.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.engagementQuestions?.length ? `<div class="lp-section"><h4>Engagement Questions</h4><ul>${pl.engagementQuestions.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.assessment?.length ? `<div class="lp-section"><h4>Assessment Methods</h4><ul>${pl.assessment.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.homework?.length ? `<div class="lp-section"><h4>Homework</h4><ul>${pl.homework.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+
+      ${pl.closureSummary ? `<div class="lp-section"><h4>Closure / Summary</h4><div>${pl.closureSummary}</div></div>`:''}
+    </div>
+  `;
+  modal({
+    title: 'Lesson Plan Preview',
+    body,
+    actions:[
+      {label:'Close', onClick:c=>c()},
+      {label:'Print / Export', primary:true, onClick:()=>exportLessonPDF(id)}
+    ]
+  });
+}
+
+function exportLessonPDF(id){
+  const p = DB.lessonPlans.find(x=>x.id===id);
+  if(!p) return;
+  const pl = p.plan||{};
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'a4'});
+  const margin = 40; const pageW = doc.internal.pageSize.getWidth(); const pageH = doc.internal.pageSize.getHeight();
+  let y = margin;
+
+  function addH(text, size=14){
+    if(y + size*2 > pageH - margin){ doc.addPage(); y = margin; }
+    doc.setFont('times','bold'); doc.setFontSize(size);
+    doc.setTextColor(11,44,77);
+    doc.text(text, margin, y); y += size + 6;
+    doc.setTextColor(0,0,0);
+  }
+  function addP(text, size=11){
+    doc.setFont('times','normal'); doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, pageW - 2*margin);
+    lines.forEach(l=>{
+      if(y + 13 > pageH - margin){ doc.addPage(); y = margin; }
+      doc.text(l, margin, y); y += size + 2;
+    });
+    y += 4;
+  }
+  function addList(items, ordered=false){
+    doc.setFont('times','normal'); doc.setFontSize(11);
+    items.forEach((it,i)=>{
+      const prefix = ordered ? `${i+1}. ` : '• ';
+      const lines = doc.splitTextToSize(prefix + it, pageW - 2*margin - 14);
+      lines.forEach((l,j)=>{
+        if(y + 13 > pageH - margin){ doc.addPage(); y = margin; }
+        doc.text(l, margin + (j===0?0:14), y); y += 13;
+      });
+    });
+    y += 4;
+  }
+
+  addH(p.title, 16);
+  doc.setFont('times','italic'); doc.setFontSize(10);
+  doc.text(`${DB.settings.schoolName} • ${p.class||''} • ${p.subject||''} • ${p.planType} plan`, margin, y); y+= 18;
+
+  if(pl.overview){ addH('Overview'); addP(pl.overview); }
+  if(pl.learningObjectives?.length){ addH('Learning Objectives'); addList(pl.learningObjectives); }
+  if(pl.keyConcepts?.length){ addH('Key Concepts'); addP(pl.keyConcepts.join(', ')); }
+  if(pl.prerequisites?.length){ addH('Prerequisites'); addList(pl.prerequisites); }
+  if(pl.materials?.length){ addH('Materials'); addList(pl.materials); }
+  if(pl.timeBreakdown?.length){ addH('Time Breakdown'); addList(pl.timeBreakdown.map(t=>`${t.phase} (${t.minutes} min) — ${t.activity}`)); }
+  if(pl.teachingStrategy?.length){ addH('Teaching Strategy'); addList(pl.teachingStrategy, true); }
+  if(pl.classActivities?.length){ addH('Class Activities'); addList(pl.classActivities); }
+  if(pl.engagementQuestions?.length){ addH('Engagement Questions'); addList(pl.engagementQuestions); }
+  if(pl.assessment?.length){ addH('Assessment'); addList(pl.assessment); }
+  if(pl.homework?.length){ addH('Homework'); addList(pl.homework); }
+  if(pl.closureSummary){ addH('Closure / Summary'); addP(pl.closureSummary); }
+
+  doc.save((p.title||'lesson-plan').replace(/[^a-z0-9]+/gi,'_') + '.pdf');
+  toast('PDF downloaded');
+}
+
+function deletePlan(id){
+  DB.lessonPlans = DB.lessonPlans.filter(p=>p.id!==id);
+  saveDB(); render();
+}
+
+/* ============================================================
+   VIEW: AI ASSISTANT
+============================================================ */
+let chatHistory = [];
+function viewAssistant(){
+  return `
+  <div class="topbar">
+    <div><h1>AI Teaching Assistant</h1><div class="sub">Explain any topic at simple, medium, or advanced level</div></div>
+    <button class="btn" onclick="chatHistory=[];render()">🔄 New Conversation</button>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="quickAsk('Explain this topic simply for a 14-year-old student')">📖 Explain Simply</button>
+      <button class="btn btn-sm" onclick="quickAsk('Give me 3 real-life examples of this topic')">🌍 Real-life Examples</button>
+      <button class="btn btn-sm" onclick="quickAsk('Design a 15-minute class activity to teach this topic')">🎯 Class Activity</button>
+      <button class="btn btn-sm" onclick="quickAsk('Give me analogies to explain this topic to weak students')">💡 Analogies</button>
+      <button class="btn btn-sm" onclick="quickAsk('What common misconceptions do students have about this topic?')">⚠️ Misconceptions</button>
+    </div>
+  </div>
+
+  <div class="chat-box">
+    <div class="chat-messages" id="chatMsgs">
+      ${chatHistory.length === 0 ? `
+        <div class="empty" style="padding:60px 20px">
+          <div class="empty-ico">🤖</div>
+          <div style="font-size:14px">Ask about any topic, concept, or teaching strategy</div>
+          <div style="font-size:12px;color:var(--mute);margin-top:6px">Try: "Explain photosynthesis at advanced level" or "How should I teach algebra to a weak class?"</div>
+        </div>
+      ` : chatHistory.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'bot'}">${m.content}</div>`).join('')}
+    </div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Ask anything — e.g., 'Explain solubility for Class 9'" onkeypress="if(event.key==='Enter') sendChat()">
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+  `;
+}
+
+function quickAsk(prompt){
+  document.getElementById('chatInput').value = prompt;
+  sendChat();
+}
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const txt = input.value.trim();
+  if(!txt) return;
+  input.value = '';
+  chatHistory.push({role:'user', content: txt});
+  renderChat();
+  chatHistory.push({role:'assistant', content: '...'});
+  renderChat();
+
+  try {
+    // Build a context from books
+    const bookCtx = DB.textbooks.slice(0,3).map(b=>{
+      return `Book: ${b.title} (${b.subject||''}, class ${b.grade||''})\n${b.chapters.slice(0,5).map(c=>`  - Ch ${c.number||''} ${c.title}`).join('\n')}`;
+    }).join('\n\n');
+
+    const sys = `You are an expert teaching assistant for ${DB.settings.schoolName}. Help teachers explain topics, design activities, and improve lessons.
+Current teacher has these textbooks:
+${bookCtx || '(no books uploaded yet)'}
+
+Keep answers practical, structured, and tuned for a Pakistani school context. Use simple English. Use bullet points where helpful.`;
+
+    const userCombined = chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n\nFollowup: ');
+    const raw = await callAI(sys, userCombined, {jsonMode:false});
+    chatHistory[chatHistory.length-1] = {role:'assistant', content: raw};
+    renderChat();
+  } catch(e){
+    chatHistory[chatHistory.length-1] = {role:'assistant', content: '⚠️ Error: '+e.message};
+    renderChat();
+  }
+}
+
+function renderChat(){
+  const el = document.getElementById('chatMsgs');
+  if(!el) return;
+  el.innerHTML = chatHistory.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'bot'}">${m.content}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ============================================================
+   VIEW: SETTINGS
+============================================================ */
+function viewSettings(){
+  return `
+  <div class="topbar">
+    <div><h1>Settings &amp; API Key</h1><div class="sub">Setup your platform — one-time configuration</div></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">🔑 AI API Key</div>
+      <div class="card-sub">Required for Question Generation, Lesson Planning &amp; AI Assistant</div>
+
+      <div class="field"><label>AI Provider</label>
+        <select id="s_provider">
+          <option value="anthropic" ${DB.settings.provider==='anthropic'?'selected':''}>Anthropic Claude (Recommended)</option>
+          <option value="openai" ${DB.settings.provider==='openai'?'selected':''}>OpenAI GPT</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="s_apikey" value="${DB.settings.apiKey||''}" placeholder="sk-ant-... or sk-..." autocomplete="off">
+      </div>
+
+      <div style="font-size:12px;color:var(--mute);background:var(--sand-2);padding:10px 12px;border-radius:8px;margin-bottom:12px;line-height:1.6">
+        <b>How to get a key:</b><br>
+        • Anthropic Claude: <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a> → API Keys<br>
+        • OpenAI: <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a><br><br>
+        <b>Security:</b> Your key is stored only in your browser (localStorage). It is never sent to any server except the AI provider's own API. Anyone with physical access to this device can see it — don't use a shared computer.
+      </div>
+
+      <button class="btn btn-primary" onclick="saveSettings()">Save API Key</button>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🏫 School Information</div>
+        <div class="card-sub">Appears on exported papers and lesson plans</div>
+
+        <div class="field"><label>School Name</label>
+          <input id="s_school" value="${DB.settings.schoolName||''}">
+        </div>
+
+        <div class="field"><label>Your Name (Teacher)</label>
+          <input id="s_teacher" value="${DB.settings.teacherName||''}">
+        </div>
+
+        <button class="btn" onclick="saveSettings()">Save Info</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💾 Data Backup</div>
+        <div class="card-sub">All data is stored in your browser — export regularly</div>
+
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn" onclick="exportAll()">📥 Download Backup</button>
+          <button class="btn" onclick="document.getElementById('restoreFile').click()">📤 Restore</button>
+          <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restoreBackup(event)">
+        </div>
+
+        <div style="font-size:12px;color:var(--mute);margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+          <b>Current data:</b><br>
+          • ${DB.textbooks.length} textbooks<br>
+          • ${DB.textbooks.reduce((s,b)=>s+(b.chapters?.length||0),0)} chapters<br>
+          • ${DB.questions.length} questions in bank<br>
+          • ${DB.papers.length} exam papers<br>
+          • ${DB.lessonPlans.length} lesson plans
+        </div>
+
+        <button class="btn btn-danger btn-sm" onclick="resetAll()" style="margin-top:14px">🗑️ Reset All Data</button>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function saveSettings(){
+  DB.settings.provider = document.getElementById('s_provider')?.value || DB.settings.provider;
+  DB.settings.apiKey = document.getElementById('s_apikey')?.value || DB.settings.apiKey;
+  DB.settings.schoolName = document.getElementById('s_school')?.value || DB.settings.schoolName;
+  DB.settings.teacherName = document.getElementById('s_teacher')?.value || DB.settings.teacherName;
+  saveDB();
+  toast('Settings saved');
+}
+
+function exportAll(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `al-siddique-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+
+function restoreBackup(ev){
+  const f = ev.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.textbooks) throw new Error('Invalid backup');
+      modal({
+        title:'Restore backup?',
+        body:`<p>This will replace your current data with the backup. ${data.textbooks?.length||0} books, ${data.questions?.length||0} questions will be loaded.</p>`,
+        actions:[
+          {label:'Cancel', onClick:c=>c()},
+          {label:'Restore', primary:true, onClick:(c)=>{
+            DB = {...defaultDB, ...data, settings:{...defaultDB.settings, ...(data.settings||{})}};
+            saveDB(); c(); render(); toast('Backup restored');
+          }}
+        ]
+      });
+    }catch(err){ toast('Invalid backup file') }
+  };
+  r.readAsText(f);
+  ev.target.value = '';
+}
+
+function resetAll(){
+  modal({
+    title:'Reset all data?',
+    body:'<p><b>Warning:</b> All textbooks, questions, papers, lesson plans and settings will be permanently deleted.</p>',
+    actions:[
+      {label:'Cancel', onClick:c=>c()},
+      {label:'Reset Everything', primary:true, onClick:(c)=>{
+        localStorage.removeItem(DB_KEY);
+        DB = loadDB(); c(); render(); toast('All data cleared');
+      }}
+    ]
+  });
+}
+
+/* ============================================================
+   VIEW: ABOUT
+============================================================ */
+function viewAbout(){
+  return `
+  <div class="topbar">
+    <div><h1>About &amp; Help</h1></div>
+  </div>
+
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">Welcome to Your Platform 👋</div>
+      <p style="line-height:1.7;font-size:13.5px">
+      Yeh aapka complete AI-powered academic platform hai. Har feature aapki uploaded textbooks se strictly grounded hai — AI kahi se bhi random content nahi banata. Saara data aapke browser mein save hota hai — koi server nahi, koi hosting nahi chahiye.
+      </p>
+
+      <h3 style="font-size:14px;margin-top:18px;margin-bottom:6px">Quick Start (3 steps)</h3>
+      <ol style="line-height:1.9;font-size:13px;padding-left:18px">
+        <li><b>Settings</b> mein jaayein — apna Anthropic ya OpenAI API key dalein (ek dafa).</li>
+        <li><b>Upload Center</b> se textbook PDF upload karein — chapters automatic detect honge.</li>
+        <li><b>Question Generator / Exam Builder / Lesson Planner</b> use karein — minutes mein output ready.</li>
+      </ol>
+
+      <h3 style="font-size:14px;margin-top:18px;margin-bottom:6px">Features</h3>
+      <ul style="line-height:1.9;font-size:13px;padding-left:18px">
+        <li>📤 PDF upload with automatic chapter extraction</li>
+        <li>✨ MCQ, Short, Long, Fill-in-the-blank, True/False generation</li>
+        <li>📝 Exam builder with marks distribution and PDF export</li>
+        <li>🎓 Lesson plans (daily, weekly, full syllabus)</li>
+        <li>🤖 AI assistant for explanations and teaching strategies</li>
+        <li>🗂️ Question bank with filters and tagging</li>
+        <li>💾 Full backup / restore</li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🔑 Need an API Key?</div>
+        <p style="font-size:13px;line-height:1.7">AI features ke liye ek-time API key chahiye. Dono mein se kisi ek provider ka:</p>
+        <div style="margin-top:10px">
+          <a href="https://console.anthropic.com/" target="_blank" class="btn" style="display:flex;margin-bottom:6px">🤖 Get Anthropic Key</a>
+          <a href="https://platform.openai.com/api-keys" target="_blank" class="btn" style="display:flex">🤖 Get OpenAI Key</a>
+        </div>
+        <p style="font-size:12px;color:var(--mute);margin-top:10px">Typical cost: $0.01-0.05 per question paper generation. Bahut reasonable.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💡 Tips</div>
+        <ul style="font-size:13px;line-height:1.8;padding-left:18px">
+          <li>Agar PDF ka text layer broken hai (like PCTB books), chapters manually add karein Syllabus view se.</li>
+          <li>Topic ke saath content paste karenge to AI questions zyada accurate honge.</li>
+          <li>Question Bank mein filter use karke exam builder ko fast banaayein.</li>
+          <li>Regular backup download karein (Settings → Data Backup).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================================================
+   MAIN RENDER
+============================================================ */
+function render(){
+  const main = document.getElementById('main');
+  let html = '';
+  switch(currentView){
+    case 'dashboard': html = viewDashboard(); break;
+    case 'upload': html = viewUpload(); break;
+    case 'syllabus': html = viewSyllabus(); break;
+    case 'qgen': html = viewQgen(); break;
+    case 'bank': html = viewBank(); break;
+    case 'exam': html = viewExam(); break;
+    case 'lesson': html = viewLesson(); break;
+    case 'assistant': html = viewAssistant(); break;
+    case 'settings': html = viewSettings(); break;
+    case 'about': html = viewAbout(); break;
+  }
+  main.innerHTML = html;
+
+  // Post-render hooks
+  if(currentView === 'upload') attachUploadHandlers();
+  if(currentView === 'qgen') {
+    renderChapterSelect();
+    if(window._qgenPrefill){
+      setTimeout(()=>{
+        if(window._qgenPrefill.bookId) document.getElementById('g_book').value = window._qgenPrefill.bookId;
+        renderChapterSelect();
+        if(window._qgenPrefill.chapterId) document.getElementById('g_chapter').value = window._qgenPrefill.chapterId;
+        renderTopicSelect();
+        if(window._qgenPrefill.topicId) document.getElementById('g_topic').value = window._qgenPrefill.topicId;
+        window._qgenPrefill = null;
+      }, 50);
+    }
+  }
+  if(currentView === 'exam'){
+    renderSections();
+  }
+  if(currentView === 'lesson'){
+    renderLessonChapterSelect();
+  }
+}
+
+function attachUploadHandlers(){
+  const dz = document.getElementById('dz');
+  const fi = document.getElementById('fileInput');
+  if(!dz || !fi) return;
+  fi.addEventListener('change', e=> handleFile(e.target.files[0]));
+  dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', ()=> dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault(); dz.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+}
+
+// First render
+render();
+
+// First-run welcome
+if(!DB.settings.apiKey && DB.textbooks.length === 0){
+  setTimeout(()=>{
+    modal({
+      title: '👋 Welcome to Al Siddique Scholars Platform!',
+      body: `
+      <p style="font-size:14px;line-height:1.7">Aapka premium curriculum intelligence platform tayyar hai. Start karne ke liye 2 simple steps:</p>
+      <ol style="line-height:1.9;font-size:13.5px">
+        <li><b>Settings</b> → AI API Key add karein (Anthropic Claude ya OpenAI)</li>
+        <li><b>Upload Center</b> → apna pehla textbook upload karein</li>
+      </ol>
+      <p style="font-size:13px;color:var(--mute);margin-top:14px">Agar abhi API key nahi hai, to bhi aap textbooks upload karke chapters/topics manually add kar sakte hain. AI features baad mein enable ho jayenge.</p>`,
+      actions:[
+        {label:'Later', onClick:c=>c()},
+        {label:'Go to Settings', primary:true, onClick:(c)=>{c(); go('settings');}}
+      ]
+    });
+  }, 400);
+}
+
+</script>
+</body>
+</html>
